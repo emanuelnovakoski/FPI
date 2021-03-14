@@ -319,6 +319,8 @@ void _on_histogram_equalization(int state, void* userData)
 	imshow("Output Image", imageOut);
 }
 
+
+//TODO TRIM IMAGE
 void _on_zoom_out(int state, void* userData)
 {
 	int sizex = imageOut.cols;
@@ -350,6 +352,110 @@ void _on_zoom_out(int state, void* userData)
 									
 		}
 	}
+	imshow("Output Image", imageOut);
+}
+
+void _on_zoom_in(int state, void* userData)
+{
+	int sizex = imageOut.cols;
+	int sizey = imageOut.rows;
+	Mat *out = new Mat(sizey*2, sizex*2, imageIn.type());
+	int newsizex = imageOut.cols*2;
+	int newsizey = imageOut.rows*2;
+	
+	for (int i=0; i<sizey; i++)
+	{
+		for (int j=0; j<sizex; j++)	
+		{
+			Vec3b pixel = imageIn.at<Vec3b>(i,j);
+			out->at<Vec3b>(i*2,j*2) = pixel;
+		}
+	}	
+	
+	for (int i=1; i<newsizey-1; i+=2)
+	{
+		for (int j=0; j<newsizex-1; j+=2)	
+		{
+			Vec3b pixel1 = out->at<Vec3b>(i-1,j);
+			Vec3b pixel2 = out->at<Vec3b>(i+1,j);
+			Vec3b pixeln;
+			pixeln.val[R] = (pixel1.val[R] + pixel2.val[R])/2;
+			pixeln.val[G] = (pixel1.val[G] + pixel2.val[G])/2;
+			pixeln.val[B] = (pixel1.val[B] + pixel2.val[B])/2;
+			out->at<Vec3b>(i,j) = pixeln;
+		}
+	}
+
+	for (int i=0; i<newsizey-1; i+=2)
+	{
+		for (int j=1; j<newsizex-1; j+=2)	
+		{
+			Vec3b pixel1 = out->at<Vec3b>(i,j-1);
+			Vec3b pixel2 = out->at<Vec3b>(i,j+1);
+			Vec3b pixeln;
+			pixeln.val[R] = (pixel1.val[R] + pixel2.val[R])/2;
+			pixeln.val[G] = (pixel1.val[G] + pixel2.val[G])/2;
+			pixeln.val[B] = (pixel1.val[B] + pixel2.val[B])/2;
+			out->at<Vec3b>(i,j) = pixeln;
+		}
+	}
+
+	for (int i=1; i<newsizey-1; i+=2)
+	{
+		for (int j=1; j<newsizex-1; j+=2)	
+		{
+			Vec3b pixel1 = out->at<Vec3b>(i,j-1);
+			Vec3b pixel2 = out->at<Vec3b>(i,j+1);
+			Vec3b pixel3 = out->at<Vec3b>(i-1,j);
+			Vec3b pixel4 = out->at<Vec3b>(i+1,j);
+			Vec3b pixeln;
+			pixeln.val[R] = (pixel1.val[R] + pixel2.val[R] + pixel3.val[R] + pixel4.val[R])/4;
+			pixeln.val[G] = (pixel1.val[G] + pixel2.val[G] + pixel3.val[G] + pixel4.val[G])/4;
+			pixeln.val[B] = (pixel1.val[B] + pixel2.val[B] + pixel3.val[B] + pixel4.val[B])/4;
+			out->at<Vec3b>(i,j) = pixeln;
+		}
+	}
+
+	imageOut.release();
+	imageOut = *out;
+	imshow("Output Image", imageOut);
+}
+
+void _on_rotate_right(int state, void* userData)
+{
+	int sizex = imageOut.cols;
+	int sizey = imageOut.rows;	
+	Mat *out = new Mat(sizex, sizey, imageOut.type());
+	
+	for (int i=0; i<sizey; i++)
+	{
+		for (int j=0; j<sizex; j++)	
+		{
+			Vec3b pixel = imageOut.at<Vec3b>(i,j);
+			out->at<Vec3b>(j, sizey-i) = pixel;
+		}
+	}	
+	imageOut.release();
+	imageOut = *out;
+	imshow("Output Image", imageOut);
+}
+
+void _on_rotate_left(int state, void* userData)
+{
+	int sizex = imageOut.cols;
+	int sizey = imageOut.rows;	
+	Mat *out = new Mat(sizex, sizey, imageOut.type());
+	
+	for (int i=0; i<sizey; i++)
+	{
+		for (int j=0; j<sizex; j++)	
+		{
+			Vec3b pixel = imageOut.at<Vec3b>(i,j);
+			out->at<Vec3b>(j, sizey - i) = pixel;
+		}
+	}	
+	imageOut.release();
+	imageOut = *out;
 	imshow("Output Image", imageOut);
 }
 
@@ -389,6 +495,9 @@ int main(int argc, char** argv )
 	createButton("Negative", _on_negative);
 	createButton("Histogram Equalization", _on_histogram_equalization);
 	createButton("Zoom Out", _on_zoom_out, NULL, QT_NEW_BUTTONBAR);
+	createButton("Zoom In", _on_zoom_in);
+	createButton("Rotate Right", _on_rotate_right, NULL, QT_NEW_BUTTONBAR);
+	createButton("Rotate Left", _on_rotate_left);
 
 	waitKey(0);
 	
